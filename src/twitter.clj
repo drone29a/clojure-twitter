@@ -1,4 +1,5 @@
 (ns twitter
+  (:refer-clojure :exclude [name])
   (:use [clojure.http.client]
         [clojure.contrib.json.read])
   (:require [clojure.http.resourcefully :as resourcefully]
@@ -29,10 +30,19 @@ is being used."
   (request (url (str twitter-url rest-uri))))
 
 (defn id
-  "ID of a user given screen name."
+  "ID of a user given screen name.
+
+Note: User IDs in the regular twitter API appear to differ from those 
+in the Search API."
   [name]
   (-> (twitter-request (str "/users/show.json?screen_name=" name))
       (get "id")))
+
+(defn name
+  "Name of a user given user id."
+  [id]
+  (-> (twitter-request (str "/users/show.json?user_id=" id))
+      (get "screen_name")))
 
 (defn friends
   "IDs of a user's friends."
