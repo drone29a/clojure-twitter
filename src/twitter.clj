@@ -22,13 +22,6 @@ is being used."
                  (twitter-request rest-uri))
        (twitter-request rest-uri))))
 
-(defn- twitter-request*
-  "Appends the rest-uri to the twitter-url, makes the request and returns
-the result of parsing the first part of the body.  It is assumed that JSON
-is being used."
-  [rest-uri]
-  (request (url (str twitter-url rest-uri))))
-
 (defn id
   "ID of a user given screen name.
 
