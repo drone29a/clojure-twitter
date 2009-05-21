@@ -1,17 +1,10 @@
-<project name="clojure-twitter" default="build" basedir=".">
-
-<property name="build.sysclasspath" value="last"/>
+<project name="clojure-twitter" default="jar" basedir=".">
 
 <target name="help">
     <echo message="Common build targets:" />
     <echo message="jar         - Builds testconsole.jar" />
-    <echo message="build       - Same as clean+jar" />
-    <echo message="compile     - Compiles TestConsole classes" />
     <echo message="clean       - Remove all *.class and testconsole.jar" />
 </target>
-
-<property file="build.properties"/>
-<property name="buildDir" value="build" />
 
 <path id="classpath">
     <pathelement path="." />
@@ -21,45 +14,14 @@
     <pathelement location="." />
 </path>
 
-<target name="build" depends="clean,jar"/>
-
-<target name="jar" depends="compile">
-	<mkdir dir="dist"/>
-    <jar jarfile="dist/${ant.project.name}.jar">
-        <fileset dir="classes"/>
+<target name="jar">
+    <jar jarfile="${ant.project.name}.jar">
+        <fileset dir="./src" includes="**/*.clj"/>
     </jar>
 </target>
 
-<target name="compile">
-    <mkdir dir="classes"/>	
-	<java
-		classname="clojure.main"
-		dir="."
-		fork="true"
-		>
-		<classpath>
-			<pathelement path="src" />
-			<pathelement path="classes" />
-    		<fileset dir="lib"> 
-      			<include name="**/*.jar" />
-    		</fileset>
-		</classpath>
-		<jvmarg value="-server" />
-		<jvmarg value="-Xmx1024m" />
-		<arg file="compile.clj" />
-	</java>
-    <copy todir="classes">
-        <fileset dir="src">
-            <include name="**/*.xsl" />
-            <include name="**/*.gif" />
-            <include name="**/*.jpg" />
-            <include name="**/*.properties" />
-        </fileset>
-    </copy>
-</target>
-
 <target name="clean">
-    <delete dir="classes"/>
+    <delete file="${ant.project.name}.jar"/>
 </target>
 
 </project>
