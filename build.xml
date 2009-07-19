@@ -38,7 +38,7 @@
       </classpath>
       
       <sysproperty key="clojure.compile.path" value="${build}"/>
-      <arg value="com.twinql.clojure.http"/>
+      <arg value="twitter"/>
     </java>
   </target>
 
