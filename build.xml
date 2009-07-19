@@ -1,27 +1,62 @@
-<project name="clojure-twitter" default="jar" basedir=".">
+<project name="clojure-twitter" default="deploy">
 
-<target name="help">
-    <echo message="Common build targets:" />
-    <echo message="jar         - Builds testconsole.jar" />
-    <echo message="clean       - Remove all *.class and testconsole.jar" />
-</target>
+  <!-- Override these with -Dclojure.jar=... in your Ant invocation. -->
+  <property name="clojure.jar" location="/opt/clojure/clojure.jar"/>
+  <property name="clojure.contrib.jar" location="/opt/clojure-contrib/clojure-contrib.jar"/>
+  
+  <available property="hasclojure" file="${clojure.jar}"/>
+  
+  <!-- Library. -->
+  <property name="src" location="src"/>
+  <property name="lib" location="lib"/>
+  <property name="build" location="classes"/>
+  <property name="jarfile" location="${ant.project.name}.jar"/>
+  <property name="deploy" location="deploy"/>
+ 
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${deploy}"/>
+  </target>
 
-<path id="classpath">
-    <pathelement path="." />
-    <fileset dir="lib">
-        <include name="*.jar" />
-    </fileset>
-    <pathelement location="." />
-</path>
+  <target name="clean" description="Remove generated files and directories.">
+    <delete dir="${deploy}"/>
+    <delete dir="${build}"/>
+    <delete file="${jarfile}"/>
+  </target>
 
-<target name="jar">
-    <jar jarfile="${ant.project.name}.jar">
-        <fileset dir="./src" includes="**/*.clj"/>
+  <target name="compile_clojure" depends="init"
+          description="Compile Clojure sources."
+          if="hasclojure">
+    <java classname="clojure.lang.Compile">
+      <classpath>
+        <path location="${src}"/>
+        <path location="${build}"/>
+        
+        <path location="${clojure.jar}"/>
+        <path location="${clojure.contrib.jar}"/>
+      </classpath>
+      
+      <sysproperty key="clojure.compile.path" value="${build}"/>
+      <arg value="com.twinql.clojure.http"/>
+    </java>
+  </target>
+
+  <target name="jar" description="Create jar file." depends="compile_clojure">
+    <jar jarfile="${jarfile}">
+      <!-- <fileset dir="${src}" includes="**/*.clj"/> -->
+      <fileset dir="${build}" includes="**/*.class"/>
+      <manifest>
+        <attribute name="Class-Path" value="."/>
+      </manifest>
     </jar>
-</target>
-
-<target name="clean">
-    <delete file="${ant.project.name}.jar"/>
-</target>
-
+  </target>
+  
+  <target name="deploy" description="Copy appropriate jar files to one place."
+    depends="jar">
+    <copy todir="${deploy}" verbose="true" file="${jarfile}"/>
+    <copy todir="${deploy}" verbose="true">
+      <fileset dir="${lib}" includes="*.jar"/>
+    </copy>
+  </target>
 </project>
