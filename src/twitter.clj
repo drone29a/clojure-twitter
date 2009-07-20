@@ -1,95 +1,143 @@
 (ns twitter
-  (:refer-clojure :exclude [name])
-  (:use [clojure.http.client]
-        [clojure.contrib.json.read])
-  (:require [clojure.http.resourcefully :as resourcefully]
-            [clojure.contrib.str-utils :as str-utils]
+  (:use [clojure.contrib.json.read]
+        [clojure.contrib.str-utils :only [re-gsub]]
+        [clojure.contrib.java-utils :only [as-str]]
+        [clojure.contrib.seq-utils :only [flatten]])
+  (:require [clojure.set :as set]
+            [com.twinql.clojure.http :as http]
             [twitter.query :as query]))
 
 (def rate-limit-reached (atom nil))
 
 (def *twitter-uri* nil)
 
-(def *settings* {:base-uri "http://twitter.com"
-                 :search-uri "http://search.twitter.com"
-                 :basic-auth nil})
+(def *settings* {:basic-auth nil
+                 :oauth-auth nil})
 
-(defn- twitter-request
-  "Appends the rest-uri to the twitter-uri, makes the request and returns
-the result of parsing the first part of the body.  It is assumed that JSON
-is being used."
-  ([rest-uri]
-     (if-not @rate-limit-reached
-       (binding [*twitter-uri* (or *twitter-uri* (*settings* :base-uri))]
-         (let [result (request (url (str *twitter-uri* rest-uri)) 
-                               :get 
-                               (when-let [auth (*settings* :basic-auth)]
-                                 {"Authorization" (str "Basic " auth)}))]
-           (condp #(if (coll? %1)  
-                     (first (filter (fn [x] (== x %2)) %1))
-                     (== %2 %1)) (:code result)
-             200 (-> result
-                     :body-seq
-                     first
-                     read-json-string)
-             304 nil
-             [400 401 403 404 406 500 502 503] (let [body (-> (first (:body-seq result))
-                                                              read-json-string)
-                                                     headers (:headers result)
-                                                     error-msg (body "error")
-                                                     request-uri (body "request")]
-                                                 (when (= (headers "X-RateLimit-Remaining") "0")
-                                                   (swap! rate-limit-reached (fn [_] true)))
-                                                 (throw (proxy [Exception] [(str error-msg ". [" request-uri "]")]
-                                                          (request [] (body "request"))
-                                                          (remaining-requests [] (headers "X-RateLimit-Remaining"))
-                                                          (rate-limit-reset [] (java.util.Date. 
-                                                                                (headers "X-RateLimit-Reset")))))))))))
-  ([type rest-uri]
-     (condp = type
-       :search (binding [*twitter-uri* (*settings* :search-uri)]
-                 (twitter-request rest-uri))
-       (twitter-request rest-uri))))
+(declare status-handler)
 
-(defn id
-  "ID of a user given screen name.
+(defmethod http/entity-as :json [entity as]
+  (read-json (http/entity-as entity :string)))
 
-Note: User IDs in the regular twitter API appear to differ from those 
-in the Search API."
-  [name]
-  (-> (twitter-request (str "/users/show.json?screen_name=" name))
-      (get "id")))
+(comment [{:keys ['is-name?]} (merge {:is-name? false} (apply hash-map rest))])
 
-(defn name
-  "Name of a user given user id."
-  [id]
-  (-> (twitter-request (str "/users/show.json?user_id=" id))
-      (get "screen_name")))
+(defmacro http-req-form
+  [req-method req-uri param-map]
+  `(~(symbol "http" (name req-method)) 
+    ~req-uri 
+    :query (apply hash-map ~param-map)
+    :as :json))
 
-(defn friends
-  "IDs of a user's friends."
-  [id]
-  (twitter-request (str "/friends/ids.json?user_id=" id)))
+(defmacro def-twitter-method
+  [method-name req-method req-url required-params optional-params handler]
+  (let [required-fn-params (vec (sort (map #(symbol (name %))
+                                           required-params)))
+        optional-fn-params (vec (sort (map #(symbol (name %))
+                                           optional-params)))]
+    `(defn ~method-name
+       [~@required-fn-params & rest#]
+       (let [rest-map# (apply hash-map rest#)
+             provided-optional-params# (set/intersection (set ~optional-params)
+                                                         (set (keys rest-map#)))
+             query-params# (sort (map (fn [x#] (keyword (re-gsub #"-" "_" (name x#))))
+                                      (concat ~required-params provided-optional-params#)))]
+         (~handler (http-req-form ~req-method
+                                  ~(str "http://" req-url)
+                                  (interleave query-params#
+                                              (vec (concat ~required-fn-params
+                                                           (vals (sort (select-keys rest-map# 
+                                                                                    provided-optional-params#))))))))))))
 
-(defn followers 
-  "IDs of a user's followers."
-  [id]
-  (try 
-   (twitter-request (str "/followers/ids.json?user_id=" id))
-   (catch Exception e
-     (if (== 0 (((proxy-mappings e) "remaining-requests") e))
-       (throw e)
-       nil))))
-
-(defn posts
-  ([]
-     (twitter-request (str "/statuses/public_timeline.json")))
-  ([user-id]
-     (twitter-request (str "/statuses/user_timeline.json?user_id=" user-id))))
-
-(defn rate-limit-info
+(def-twitter-method update-status
+  :post
+  "twitter.com/statuses/update.json"
+  [:status
+   :in-reply-to-status-id]
   []
-  (twitter-request "/account/rate_limit_status.json"))
+  (comp #(:status (:content %)) status-handler))
+
+(comment (defn update-status
+           [status in-reply-to-status-id]
+           (apply (comp #(:status (:content %)) status-handler)
+                  (http/post (str "http://" "twitter.com/statuses/update.json")
+                             :query {:status status
+                                     :in_reply_to_status_id in-reply-to-status-id}))))
+
+(def-twitter-method show-status
+  :get
+  "twitter.com/statuses/show.json"
+  [:id]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method show-user-by-id
+  :get
+  "twitter.com/users/show.json"
+  [:user-id]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method show-user-by-name
+  :get
+  "twitter.com/users/show.json"
+  [:screen-name]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method friends-of-id
+  :get
+  "twitter.com/friends/ids.json"
+  [:user-id]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method friends-of-name
+  :get
+  "twitter.com/friends/ids.json"
+  [:screen-name] 
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method followers-of-id
+  :get
+  "twitter.com/followers/ids.json"
+  [:user-id]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method followers-of-name
+  :get
+  "twitter.com/followers/ids.json"
+  [:screen-name]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method public-timeline
+  :get
+  "twitter.com/statuses/public_timeline.json"
+  []
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method user-timeline
+  :get
+  "twitter.com/statuses/user_timeline.json"
+  []
+  [:id
+   :user-id
+   :screen-name
+   :since-id
+   :max-id
+   :count
+   :page]
+  (comp #(:content %) status-handler))
+
+(def-twitter-method rate-limit-status
+  :get
+  "twitter.com/account/rate_limit_status.json"
+  []
+  []
+  (comp #(:content %) status-handler))
 
 (defn search
   "Run a search query."
@@ -99,3 +147,26 @@ in the Search API."
      (search query rpp 1))
   ([query rpp page]
      (twitter-request :search (str "/search.json?q=" query "&rpp=" rpp "&page=" page))))
+
+(defn status-handler
+  [result]
+  (condp #(if (coll? %1)  
+            (first (filter (fn [x] (== x %2)) %1))
+            (== %2 %1)) (:code result)
+    200 result
+    304 nil
+    [400 401 403 404 406 500 502 503] (let [body (:content result)
+                                            headers (into {} (:headers result))
+                                            error-msg (body "error")
+                                            request-uri (body "request")]
+                                        (throw (proxy [Exception] [(str error-msg ". [" request-uri "]")]
+                                                 (request [] (body "request"))
+                                                 (remaining-requests [] (headers "X-RateLimit-Remaining"))
+                                                 (rate-limit-reset [] (java.util.Date. 
+                                                                       (headers "X-RateLimit-Reset"))))))))
+
+(defn rate-limiter-shutoff-handler
+  [result]
+  (let [headers (into {} (:headers result))]
+    (when (= (headers "X-RateLimit-Remaining") "0")
+      (swap! rate-limit-reached (fn [_] true)))))
