@@ -32,7 +32,13 @@
       <classpath>
         <path location="${src}"/>
         <path location="${build}"/>
-        
+
+        <path location="${lib}/clj-apache-http.jar"/>
+        <path location="${lib}/commons-logging-1.1.1.jar"/>
+        <path location="${lib}/httpclient-4.0-beta2.jar"/>
+        <path location="${lib}/httpcore-4.0-beta3.jar"/>
+        <path location="${lib}/httpmime-4.0-beta2.jar"/>
+
         <path location="${clojure.jar}"/>
         <path location="${clojure.contrib.jar}"/>
       </classpath>
