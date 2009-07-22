@@ -19,15 +19,6 @@
 (defmethod http/entity-as :json [entity as]
   (read-json (http/entity-as entity :string)))
 
-(comment [{:keys ['is-name?]} (merge {:is-name? false} (apply hash-map rest))])
-
-(defmacro http-req-form
-  [req-method req-uri param-map]
-  `(~(symbol "http" (name req-method)) 
-    ~req-uri 
-    :query (apply hash-map ~param-map)
-    :as :json))
-
 (defmacro def-twitter-method
   [method-name req-method req-url required-params optional-params handler]
   (let [required-fn-params (vec (sort (map #(symbol (name %))
@@ -41,12 +32,13 @@
                                                          (set (keys rest-map#)))
              query-params# (sort (map (fn [x#] (keyword (re-gsub #"-" "_" (name x#))))
                                       (concat ~required-params provided-optional-params#)))]
-         (~handler (http-req-form ~req-method
+         (~handler (~(symbol "http" (name req-method))
                                   ~(str "http://" req-url)
-                                  (interleave query-params#
-                                              (vec (concat ~required-fn-params
-                                                           (vals (sort (select-keys rest-map# 
-                                                                                    provided-optional-params#))))))))))))
+                                  :query (apply hash-map (interleave query-params#
+                                                                    (vec (concat ~required-fn-params
+                                                                                 (vals (sort (select-keys rest-map# 
+                                                                                                          provided-optional-params#)))))))
+                                  :as :json))))))
 
 (def-twitter-method update-status
   :post
