@@ -6,7 +6,10 @@
   (:require [clojure.set :as set]
             [com.twinql.clojure.http :as http]
             [twitter.query :as query]
-            [oauth.client :as oauth]))
+            [oauth.client :as oauth])
+  (:import (java.io File)
+           (org.apache.http.entity.mime.content FileBody)
+           (org.apache.http.entity.mime MultipartEntity)))
 
 (declare status-handler)
 
@@ -296,20 +299,91 @@ take any required and optional arguments and call the associated Twitter method.
    :profile-sidebar-border-color]
   (comp #(:content %) status-handler))
 
-;; TODO: need to add file uplooad support
+
 (comment (def-twitter-method update-profile-image
            :post
            "twitter.com/account/update_profile_image.json"
            [:image]
            []
-           (comp #(:content %) status-handler))
+           (comp #(:content %) status-handler)))
 
-         (def-twitter-method update-profile-background-image
+(defn update-profile-image [image]
+  (let [req-uri__9408__auto__ "http://twitter.com/account/update_profile_image.json"
+  
+        oauth-creds__9414__auto__ (when
+                                      (and
+                                       *oauth-consumer*
+                                       *oauth-access-token*)
+                                    (oauth/credentials
+                                     *oauth-consumer*
+                                     *oauth-access-token*
+                                     :post
+                                     req-uri__9408__auto__))]
+    ((comp #(:content %) status-handler)
+     (http/post
+      req-uri__9408__auto__
+      :query
+      oauth-creds__9414__auto__
+      :parameters
+      (http/map->params {:use-expect-continue false})
+      :body (doto (MultipartEntity.)
+              (.addPart "image" (FileBody. (File. image))))
+      :as
+      :json))))
+
+(comment (def-twitter-method update-profile-background-image
            :post
            "twitter.com/account/update_profile_background_image.json"
            [:image]
            [:title]
            (comp #(:content %) status-handler)))
+
+(defn update-profile-background-image [image & rest__2570__auto__]
+  (let [req-uri__2571__auto__ "http://twitter.com/account/update_profile_background_image.json"
+                              rest-map__2572__auto__ (apply hash-map rest__2570__auto__)
+                              provided-optional-params__2573__auto__ (set/intersection
+                                                                      (set [:title])
+                                                                       (set
+                                                                        (keys
+                                                                         rest-map__2572__auto__)))
+                              query-param-names__2574__auto__ (sort
+                                                               (map
+                                                                (fn 
+                                                                 [x__2575__auto__]
+                                                                 (keyword
+                                                                  (re-gsub
+                                                                   #"-"
+                                                                   "_"
+                                                                   (name
+                                                                    x__2575__auto__))))
+                                                                provided-optional-params__2573__auto__))
+                              query-params__2576__auto__ (apply
+                                                          hash-map
+                                                           (interleave
+                                                            query-param-names__2574__auto__
+                                                            (vec
+                                                             (vals
+                                                              (sort
+                                                               (select-keys
+                                                                rest-map__2572__auto__
+                                                                provided-optional-params__2573__auto__))))))
+                              oauth-creds__2577__auto__ (when
+                                                            (and
+                                                             *oauth-consumer*
+                                                             *oauth-access-token*)
+                                                          (oauth/credentials
+                                                           *oauth-consumer*
+                                                           *oauth-access-token*
+                                                           :post
+                                                           req-uri__2571__auto__
+                                                           query-params__2576__auto__))]
+    ((comp #(:content %) status-handler)
+     (http/post req-uri__2571__auto__
+                :query (merge query-params__2576__auto__ oauth-creds__2577__auto__)
+                :parameters (http/map->params {:use-expect-continue false})
+                :body (doto (MultipartEntity.)
+                        (.addPart "image" (FileBody. (File. image))))
+                :as :json))))
 
 (def-twitter-method update-profile
   :post
