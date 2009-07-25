@@ -49,15 +49,18 @@
              query-params# (apply hash-map (interleave query-param-names#
                                                        (vec (concat ~required-fn-params
                                                                     (vals (sort (select-keys rest-map# 
-                                                                                             provided-optional-params#)))))))]
+                                                                                             provided-optional-params#)))))))
+             oauth-creds# (when (and *oauth-consumer* 
+                                     *oauth-access-token*) 
+                            (oauth/credentials *oauth-consumer*
+                                               *oauth-access-token*
+                                               ~req-method
+                                               req-uri#
+                                               query-params#))]
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
                     :query (merge query-params#
-                                  (oauth/credentials *oauth-consumer*
-                                                     *oauth-access-token*
-                                                     ~req-method
-                                                     req-uri#
-                                                     query-params#))
+                                  oauth-creds#)
                     :parameters (http/map->params 
                                  {:use-expect-continue false})
                     :as :json))))))
