@@ -5,19 +5,32 @@
         [clojure.contrib.seq-utils :only [flatten]])
   (:require [clojure.set :as set]
             [com.twinql.clojure.http :as http]
-            [twitter.query :as query]))
-
-(def rate-limit-reached (atom nil))
-
-(def *twitter-uri* nil)
-
-(def *settings* {:basic-auth nil
-                 :oauth-auth nil})
+            [twitter.query :as query]
+            [oauth.client :as oauth]))
 
 (declare status-handler)
 
+(def *oauth-consumer* nil)
+(def *oauth-access-token* nil)
+(def *protocol* "http")
+
+;; Get JSON from clj-apache-http 
 (defmethod http/entity-as :json [entity as]
   (read-json (http/entity-as entity :string)))
+
+(defmacro with-oauth
+  "Set the OAuth access token to be used for all contained Twitter requests."
+  [consumer access-token & body]
+  `(binding [*oauth-consumer* ~consumer
+             *oauth-access-token* ~access-token]
+     (do 
+       ~@body)))
+
+(defmacro with-https
+  [body]
+  `(binding [*protocol* "https"]
+     (do 
+       ~@body)))
 
 (defmacro def-twitter-method
   [method-name req-method req-url required-params optional-params handler]
@@ -27,25 +40,33 @@
                                            optional-params)))]
     `(defn ~method-name
        [~@required-fn-params & rest#]
-       (let [rest-map# (apply hash-map rest#)
+       (let [req-uri# ~(str *protocol* "://" req-url)
+             rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             query-params# (sort (map (fn [x#] (keyword (re-gsub #"-" "_" (name x#))))
-                                      (concat ~required-params provided-optional-params#)))]
+             query-param-names# (sort (map (fn [x#] (keyword (re-gsub #"-" "_" (name x#))))
+                                      (concat ~required-params provided-optional-params#)))
+             query-params# (apply hash-map (interleave query-param-names#
+                                                       (vec (concat ~required-fn-params
+                                                                    (vals (sort (select-keys rest-map# 
+                                                                                             provided-optional-params#)))))))]
          (~handler (~(symbol "http" (name req-method))
-                                  ~(str "http://" req-url)
-                                  :query (apply hash-map (interleave query-params#
-                                                                    (vec (concat ~required-fn-params
-                                                                                 (vals (sort (select-keys rest-map# 
-                                                                                                          provided-optional-params#)))))))
-                                  :as :json))))))
+                    req-uri#
+                    :query (merge query-params#
+                                  (oauth/credentials *oauth-consumer*
+                                                     *oauth-access-token*
+                                                     ~req-method
+                                                     req-uri#
+                                                     query-params#))
+                    :parameters (http/map->params 
+                                 {:use-expect-continue false})
+                    :as :json))))))
 
 (def-twitter-method update-status
   :post
   "twitter.com/statuses/update.json"
-  [:status
-   :in-reply-to-status-id]
-  []
+  [:status]
+  [:in-reply-to-status-id]
   (comp #(:status (:content %)) status-handler))
 
 (comment (defn update-status
@@ -131,14 +152,14 @@
   []
   (comp #(:content %) status-handler))
 
-(defn search
-  "Run a search query."
-  ([query]
-     (search query 100 1))
-  ([query rpp]
-     (search query rpp 1))
-  ([query rpp page]
-     (twitter-request :search (str "/search.json?q=" query "&rpp=" rpp "&page=" page))))
+(comment (defn search
+           "Run a search query."
+           ([query]
+              (search query 100 1))
+           ([query rpp]
+              (search query rpp 1))
+           ([query rpp page]
+              (twitter-request :search (str "/search.json?q=" query "&rpp=" rpp "&page=" page)))))
 
 (defn status-handler
   [result]
@@ -157,8 +178,10 @@
                                                  (rate-limit-reset [] (java.util.Date. 
                                                                        (headers "X-RateLimit-Reset"))))))))
 
-(defn rate-limiter-shutoff-handler
-  [result]
-  (let [headers (into {} (:headers result))]
-    (when (= (headers "X-RateLimit-Remaining") "0")
-      (swap! rate-limit-reached (fn [_] true)))))
+(defn make-rate-limit-handler
+  "Creates a handler that will only be called if the API rate limit has been exceeded."
+  [handler-fn]
+  (fn [result]
+    (let [headers (into {} (:headers result))]
+      (when (= (headers "X-RateLimit-Remaining") "0")
+        (handler-fn result)))))
