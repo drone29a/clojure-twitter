@@ -70,6 +70,10 @@ take any required and optional arguments and call the associated Twitter method.
                                  {:use-expect-continue false})
                     :as :json))))))
 
+;;;; Almost every method, and all functionality, of the Twitter API
+;;;; is defined below with def-twitter-method or a custom function to support
+;;;; special cases, such as uploading image files.
+
 (def-twitter-method public-timeline
   :get
   "twitter.com/statuses/public_timeline.json"
@@ -560,6 +564,8 @@ take any required and optional arguments and call the associated Twitter method.
   (comp #(:content %) status-handler))
 
 (defn status-handler
+  "Handle the various HTTP status codes that may be returned when accessing
+the Twitter API."
   [result]
   (condp #(if (coll? %1)  
             (first (filter (fn [x] (== x %2)) %1))
