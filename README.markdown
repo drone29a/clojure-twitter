@@ -32,3 +32,9 @@ Access the Twitter API from Clojure.
 
     ;; Find out who follows dons
     (twitter/followers-of-name "dons")
+
+# Authors #
+
+Development funded by LikeStream LLC (Don Jackson and Shirish Andhare), see [http://www.likestream.org/opensource].
+
+Designed and developed by Matt Revelle of [Lightpost Software](http://lightpostsoftware.com).
