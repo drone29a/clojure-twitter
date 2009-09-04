@@ -24,10 +24,14 @@ Access the Twitter API from Clojure.
     (def oauth-access-token 
          ;; Look up an access token you've stored away after the user
          ;; authorized a request token and you traded it in for an
-         ;; access token.  See clj-oauth (http://github.com/mattrepl/clj-oauth) for an example.
+         ;; access token.  See clj-oauth (http://github.com/mattrepl/clj-oauth) for an example.)
+    (def oauth-access-token-secret
+         ;; The secret included with the access token)
 
     ;; Post to twitter
-    (twitter/with-oauth oauth-consumer oauth-access-token
+    (twitter/with-oauth oauth-consumer 
+                        oauth-access-token
+                        oauth-access-token-secret
                         (twitter/update-status "posting from #clojure with #oauth"))
 
     ;; Find out who follows dons
