@@ -45,7 +45,7 @@ take any required and optional arguments and call the associated Twitter method.
                                            optional-params)))]
     `(defn ~method-name
        [~@required-fn-params & rest#]
-       (let [req-uri# ~(str *protocol* "://" req-url)
+       (let [req-uri# (str *protocol* "://" req-url)
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
