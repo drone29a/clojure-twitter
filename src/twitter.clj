@@ -15,6 +15,7 @@
 
 (def *oauth-consumer* nil)
 (def *oauth-access-token* nil)
+(def *oauth-access-token-secret* nil)
 (def *protocol* "http")
 
 ;; Get JSON from clj-apache-http 
@@ -23,9 +24,10 @@
 
 (defmacro with-oauth
   "Set the OAuth access token to be used for all contained Twitter requests."
-  [consumer access-token & body]
+  [consumer access-token access-token-secret & body]
   `(binding [*oauth-consumer* ~consumer
-             *oauth-access-token* ~access-token]
+             *oauth-access-token* ~access-token
+             *oauth-access-token-secret* ~access-token-secret]
      (do 
        ~@body)))
 
@@ -59,6 +61,7 @@ take any required and optional arguments and call the associated Twitter method.
                                      *oauth-access-token*) 
                             (oauth/credentials *oauth-consumer*
                                                *oauth-access-token*
+                                               *oauth-access-token-secret*
                                                ~req-method
                                                req-uri#
                                                query-params#))]
