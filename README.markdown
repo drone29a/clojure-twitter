@@ -35,7 +35,7 @@ Access the Twitter API from Clojure.
                         (twitter/update-status "posting from #clojure with #oauth"))
 
     ;; Find out who follows dons
-    (twitter/followers-of-name "dons")
+    (twitter/followers-of-name "donsbot")
 
 # Authors #
 
