@@ -64,7 +64,8 @@ take any required and optional arguments and call the associated Twitter method.
                                                *oauth-access-token-secret*
                                                ~req-method
                                                req-uri#
-                                               query-params#))]
+                                               (into {} (map (fn [[k# v#]] [k# (oauth/url-encode v#)]) query-params#))))]
+         ; (into {} (map (fn [k# v#] [k# (oauth/url-encode v#)]) query-params#))
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
                     :query (merge query-params#
