@@ -1,8 +1,7 @@
 (ns twitter
-  (:use [clojure.contrib.json.read]
+  (:use [clojure.contrib.json :only [read-json]]
         [clojure.contrib.str-utils :only [re-gsub]]
-        [clojure.contrib.java-utils :only [as-str]]
-        [clojure.contrib.seq-utils :only [flatten]])
+        [clojure.contrib.java-utils :only [as-str]])
   (:require [clojure.set :as set]
             [com.twinql.clojure.http :as http]
             [twitter.query :as query]
@@ -103,6 +102,16 @@ take any required and optional arguments and call the associated Twitter method.
    :user-id
    :screen-name
    :since-id
+   :max-id
+   :count
+   :page]
+  (comp #(:content %) status-handler))
+
+(def-twitter-method home-timeline
+  :get
+  "twitter.com/statuses/home_timeline.json"
+  []
+  [:since-id
    :max-id
    :count
    :page]
@@ -268,7 +277,7 @@ take any required and optional arguments and call the associated Twitter method.
   []
   (comp #(:content %) status-handler))
 
-(def-twitter-method verifiy-credentials
+(def-twitter-method verify-credentials
   :get
   "twitter.com/account/verify_credentials.json"
   []
