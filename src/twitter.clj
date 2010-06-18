@@ -31,7 +31,7 @@
        ~@body)))
 
 (defmacro with-https
-  [body]
+  [ & body]
   `(binding [*protocol* "https"]
      (do 
        ~@body)))
