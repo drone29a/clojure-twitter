@@ -79,14 +79,14 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method public-timeline
   :get
-  "twitter.com/statuses/public_timeline.json"
+  "api.twitter.com/1/statuses/public_timeline.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method friends-timeline
   :get
-  "twitter.com/statuses/friends_timeline.json"
+  "api.twitter.com/1/statuses/friends_timeline.json"
   []
   [:since-id
    :max-id
@@ -96,7 +96,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method user-timeline
   :get
-  "twitter.com/statuses/user_timeline.json"
+  "api.twitter.com/1/statuses/user_timeline.json"
   []
   [:id
    :user-id
@@ -109,7 +109,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method home-timeline
   :get
-  "twitter.com/statuses/home_timeline.json"
+  "api.twitter.com/1/statuses/home_timeline.json"
   []
   [:since-id
    :max-id
@@ -119,7 +119,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method mentions
   :get
-  "twitter.com/statuses/mentions.json"
+  "api.twitter.com/1/statuses/mentions.json"
   []
   [:since-id
    :max-id
@@ -129,42 +129,42 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method show-status
   :get
-  "twitter.com/statuses/show.json"
+  "api.twitter.com/1/statuses/show.json"
   [:id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method update-status
   :post
-  "twitter.com/statuses/update.json"
+  "api.twitter.com/1/statuses/update.json"
   [:status]
   [:in-reply-to-status-id]
   (comp #(:status (:content %)) status-handler))
 
 (def-twitter-method destroy-status
   :post
-  "twitter.com/statuses/destroy.json"
+  "api.twitter.com/1/statuses/destroy.json"
   [:id]
   []
   (comp #(:status (:content %)) status-handler))
 
 (def-twitter-method show-user-by-id
   :get
-  "twitter.com/users/show.json"
+  "api.twitter.com/1/users/show.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method show-user-by-name
   :get
-  "twitter.com/users/show.json"
+  "api.twitter.com/1/users/show.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method direct-messages
   :get
-  "twitter.com/direct_messages.json"
+  "api.twitter.com/1/direct_messages.json"
   []
   [:since-id
    :max-id
@@ -174,7 +174,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method sent-direct-messages
   :get
-  "twitter.com/direct_messages/sent.json"
+  "api.twitter.com/1/direct_messages/sent.json"
   []
   [:since-id
    :max-id
@@ -184,7 +184,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method send-direct-message-to-id
   :post
-  "twitter.com/direct_messages/new.json"
+  "api.twitter.com/1/direct_messages/new.json"
   [:user-id
    :text]
   []
@@ -192,7 +192,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method send-direct-message-to-name
   :post
-  "twitter.com/direct_messages/new.json"
+  "api.twitter.com/1/direct_messages/new.json"
   [:screen-name
    :text]
   []
@@ -200,42 +200,42 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method destroy-direct-message
   :post
-  "twitter.com/direct_messages/destroy.json"
+  "api.twitter.com/1/direct_messages/destroy.json"
   [:id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method create-friendship-to-id
   :post
-  "twitter.com/friendships/create.json"
+  "api.twitter.com/1/friendships/create.json"
   [:user-id]
   [:follow]
   (comp #(:content %) status-handler))
 
 (def-twitter-method create-friendship-to-name
   :post
-  "twitter.com/friendships/create.json"
+  "api.twitter.com/1/friendships/create.json"
   [:screen-name]
   [:follow]
   (comp #(:content %) status-handler))
 
 (def-twitter-method destroy-friendship-to-id
   :post
-  "twitter.com/friendships/destroy.json"
+  "api.twitter.com/1/friendships/destroy.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method destroy-friendship-to-name
   :post
-  "twitter.com/friendships/destroy.json"
+  "api.twitter.com/1/friendships/destroy.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method show-friendship-by-ids
   :get
-  "twitter.com/friendships/show.json"
+  "api.twitter.com/1/friendships/show.json"
   [:source-id
    :target-id]
   []
@@ -243,7 +243,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method show-friendship-by-names
   :get
-  "twitter.com/friendships/show.json"
+  "api.twitter.com/1/friendships/show.json"
   [:source-screen-name
    :target-screen-name]
   []
@@ -251,63 +251,63 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method friends-of-id
   :get
-  "twitter.com/friends/ids.json"
+  "api.twitter.com/1/friends/ids.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method friends-of-name
   :get
-  "twitter.com/friends/ids.json"
+  "api.twitter.com/1/friends/ids.json"
   [:screen-name] 
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method followers-of-id
   :get
-  "twitter.com/followers/ids.json"
+  "api.twitter.com/1/followers/ids.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method followers-of-name
   :get
-  "twitter.com/followers/ids.json"
+  "api.twitter.com/1/followers/ids.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method verify-credentials
   :get
-  "twitter.com/account/verify_credentials.json"
+  "api.twitter.com/1/account/verify_credentials.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method rate-limit-status
   :get
-  "twitter.com/account/rate_limit_status.json"
+  "api.twitter.com/1/account/rate_limit_status.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method end-session
   :post
-  "twitter.com/account/end_session.json"
+  "api.twitter.com/1/account/end_session.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method update-delivery-device
   :post
-  "twitter.com/account/update_delivery_device.json"
+  "api.twitter.com/1/account/update_delivery_device.json"
   [:device]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method update-profile-colors
   :post
-  "twitter.com/account/update_profile_colors.json"
+  "api.twitter.com/1/account/update_profile_colors.json"
   []
   [:profile-background-color
    :profile-text-color
@@ -319,13 +319,13 @@ take any required and optional arguments and call the associated Twitter method.
 
 (comment (def-twitter-method update-profile-image
            :post
-           "twitter.com/account/update_profile_image.json"
+           "api.twitter.com/1/account/update_profile_image.json"
            [:image]
            []
            (comp #(:content %) status-handler)))
 
 (defn update-profile-image [image]
-  (let [req-uri__9408__auto__ "http://twitter.com/account/update_profile_image.json"
+  (let [req-uri__9408__auto__ "http://api.twitter.com/1/account/update_profile_image.json"
   
         oauth-creds__9414__auto__ (when
                                       (and
@@ -350,13 +350,13 @@ take any required and optional arguments and call the associated Twitter method.
 
 (comment (def-twitter-method update-profile-background-image
            :post
-           "twitter.com/account/update_profile_background_image.json"
+           "api.twitter.com/1/account/update_profile_background_image.json"
            [:image]
            [:title]
            (comp #(:content %) status-handler)))
 
 (defn update-profile-background-image [image & rest__2570__auto__]
-  (let [req-uri__2571__auto__ "http://twitter.com/account/update_profile_background_image.json"
+  (let [req-uri__2571__auto__ "http://api.twitter.com/1/account/update_profile_background_image.json"
                               rest-map__2572__auto__ (apply hash-map rest__2570__auto__)
                               provided-optional-params__2573__auto__ (set/intersection
                                                                       (set [:title])
@@ -404,7 +404,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method update-profile
   :post
-  "twitter.com/account/update_profile.json"
+  "api.twitter.com/1/account/update_profile.json"
   []
   [:name 
    :email
@@ -415,7 +415,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method favorites
   :get
-  "twitter.com/favorites.json"
+  "api.twitter.com/1/favorites.json"
   []
   [:id
    :page]
@@ -423,112 +423,112 @@ take any required and optional arguments and call the associated Twitter method.
 
 (def-twitter-method create-favorite
   :post
-  "twitter.com/favorites/create.json"
+  "api.twitter.com/1/favorites/create.json"
   [:id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method destroy-favorite
   :post
-  "twitter.com/favorites/destroy.json"
+  "api.twitter.com/1/favorites/destroy.json"
   [:id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method notifications-follow-by-id
   :post
-  "twitter.com/notifications/follow.json"
+  "api.twitter.com/1/notifications/follow.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method notifications-follow-by-name
   :post
-  "twitter.com/notifications/follow.json"
+  "api.twitter.com/1/notifications/follow.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method notifications-leave-by-id
   :post
-  "twitter.com/notifications/leave.json"
+  "api.twitter.com/1/notifications/leave.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method notifications-leave-by-name
   :post
-  "twitter.com/notifications/leave.json"
+  "api.twitter.com/1/notifications/leave.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method create-block
   :post
-  "twitter.com/blocks/create.json"
+  "api.twitter.com/1/blocks/create.json"
   [:user-id-or-screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method destroy-block
   :post
-  "twitter.com/blocks/destroy.json"
+  "api.twitter.com/1/blocks/destroy.json"
   [:user-id-or-screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method block-exists-for-id
   :get
-  "twitter.com/blocks/exists.json"
+  "api.twitter.com/1/blocks/exists.json"
   [:user-id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method block-exists-for-name
   :get
-  "twitter.com/blocks/exists.json"
+  "api.twitter.com/1/blocks/exists.json"
   [:screen-name]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method blocking-users
   :get
-  "twitter.com/blocks/blocking.json"
+  "api.twitter.com/1/blocks/blocking.json"
   []
   [:page]
   (comp #(:content %) status-handler))
 
 (def-twitter-method blocking-user-ids
   :get
-  "twitter.com/blocks/blocking/ids.json"
+  "api.twitter.com/1/blocks/blocking/ids.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method saved-searches
   :get
-  "twitter.com/saved_searches.json"
+  "api.twitter.com/1/saved_searches.json"
   []
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method show-saved-search
   :get
-  "twitter.com/saved_searches/show.json"
+  "api.twitter.com/1/saved_searches/show.json"
   [:id]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method create-saved-search
   :post
-  "twitter.com/saved_searches/create.json"
+  "api.twitter.com/1/saved_searches/create.json"
   [:query]
   []
   (comp #(:content %) status-handler))
 
 (def-twitter-method destroy-saved-search
   :post
-  "twitter.com/saved_searches/destroy.json"
+  "api.twitter.com/1/saved_searches/destroy.json"
   [:id]
   []
   (comp #(:content %) status-handler))
