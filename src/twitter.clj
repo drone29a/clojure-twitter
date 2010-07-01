@@ -114,7 +114,9 @@ take any required and optional arguments and call the associated Twitter method.
   [:since-id
    :max-id
    :count
-   :page]
+   :page
+   :skip-user
+   :include-entities]
   (comp #(:content %) status-handler))
 
 (def-twitter-method mentions
