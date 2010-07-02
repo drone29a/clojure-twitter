@@ -164,6 +164,20 @@ take any required and optional arguments and call the associated Twitter method.
   []
   (comp #(:content %) status-handler))
 
+(def-twitter-method lookup-users-by-id
+  :get
+  "api.twitter.com/1/users/lookup.json"
+  [:user-id]
+  []
+  (comp #(:content %) status-handler))
+
+(def-twitter-method lookup-users-by-name
+  :get
+  "api.twitter.com/1/users/lookup.json"
+  [:screen-name]
+  []
+  (comp #(:content %) status-handler))
+
 (def-twitter-method direct-messages
   :get
   "api.twitter.com/1/direct_messages.json"
