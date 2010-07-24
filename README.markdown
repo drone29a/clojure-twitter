@@ -39,6 +39,6 @@ Access the Twitter API from Clojure.
 
 # Authors #
 
-Development funded by LikeStream LLC (Don Jackson and Shirish Andhare), see [http://www.likestream.org/opensource](http://www.likestream.org/opensource).
+Development funded by LikeStream LLC (Don Jackson and Shirish Andhare), see [http://www.likestream.org/opensource.html](http://www.likestream.org/opensource.html).
 
 Designed and developed by Matt Revelle of [Lightpost Software](http://lightpostsoftware.com).
