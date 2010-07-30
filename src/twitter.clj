@@ -1,8 +1,8 @@
 (ns twitter
   (:use [clojure.contrib.json :only [read-json]]
-        [clojure.string :only [replace]]
         [clojure.contrib.java-utils :only [as-str]])
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [com.twinql.clojure.http :as http]
             [twitter.query :as query]
             [oauth.client :as oauth]
@@ -51,7 +51,7 @@ take any required and optional arguments and call the associated Twitter method.
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             query-param-names# (sort (map (fn [x#] (keyword (replace #"-" "_" (name x#))))
+             query-param-names# (sort (map (fn [x#] (keyword (string/replace #"-" "_" (name x#))))
                                       (concat ~required-params provided-optional-params#)))
              query-params# (apply hash-map (interleave query-param-names#
                                                        (vec (concat ~required-fn-params
@@ -385,7 +385,7 @@ take any required and optional arguments and call the associated Twitter method.
                                                                 (fn 
                                                                  [x__2575__auto__]
                                                                  (keyword
-                                                                  (replace
+                                                                  (string/replace
                                                                    #"-"
                                                                    "_"
                                                                    (name
