@@ -1,11 +1,12 @@
 (ns twitter
   (:use [clojure.contrib.json :only [read-json]]
-        [clojure.contrib.str-utils :only [re-gsub]]
+        [clojure.string :only [replace]]
         [clojure.contrib.java-utils :only [as-str]])
   (:require [clojure.set :as set]
             [com.twinql.clojure.http :as http]
             [twitter.query :as query]
-            [oauth.client :as oauth])
+            [oauth.client :as oauth]
+            [oauth.signature])
   (:import (java.io File)
            (org.apache.http.entity.mime.content FileBody)
            (org.apache.http.entity.mime MultipartEntity)))
@@ -50,7 +51,7 @@ take any required and optional arguments and call the associated Twitter method.
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             query-param-names# (sort (map (fn [x#] (keyword (re-gsub #"-" "_" (name x#))))
+             query-param-names# (sort (map (fn [x#] (keyword (replace #"-" "_" (name x#))))
                                       (concat ~required-params provided-optional-params#)))
              query-params# (apply hash-map (interleave query-param-names#
                                                        (vec (concat ~required-fn-params
@@ -63,8 +64,8 @@ take any required and optional arguments and call the associated Twitter method.
                                                *oauth-access-token-secret*
                                                ~req-method
                                                req-uri#
-                                               (into {} (map (fn [[k# v#]] [k# (oauth/url-encode v#)]) query-params#))))]
-         ; (into {} (map (fn [k# v#] [k# (oauth/url-encode v#)]) query-params#))
+                                               (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))))]
+         ; (into {} (map (fn [k# v#] [k# (oauth.signature/url-encode v#)]) query-params#))
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
                     :query (merge query-params#
@@ -340,7 +341,7 @@ take any required and optional arguments and call the associated Twitter method.
            []
            (comp #(:content %) status-handler)))
 
-(defn update-profile-image [image]
+(defn update-profile-image [^String image]
   (let [req-uri__9408__auto__ "http://api.twitter.com/1/account/update_profile_image.json"
   
         oauth-creds__9414__auto__ (when
@@ -371,7 +372,7 @@ take any required and optional arguments and call the associated Twitter method.
            [:title]
            (comp #(:content %) status-handler)))
 
-(defn update-profile-background-image [image & rest__2570__auto__]
+(defn update-profile-background-image [^String image & rest__2570__auto__]
   (let [req-uri__2571__auto__ "http://api.twitter.com/1/account/update_profile_background_image.json"
                               rest-map__2572__auto__ (apply hash-map rest__2570__auto__)
                               provided-optional-params__2573__auto__ (set/intersection
@@ -384,7 +385,7 @@ take any required and optional arguments and call the associated Twitter method.
                                                                 (fn 
                                                                  [x__2575__auto__]
                                                                  (keyword
-                                                                  (re-gsub
+                                                                  (replace
                                                                    #"-"
                                                                    "_"
                                                                    (name
@@ -609,7 +610,7 @@ the Twitter API."
                                                  (request [] (body "request"))
                                                  (remaining-requests [] (headers "X-RateLimit-Remaining"))
                                                  (rate-limit-reset [] (java.util.Date. 
-                                                                       (headers "X-RateLimit-Reset"))))))))
+                                                                       (long (headers "X-RateLimit-Reset")))))))))
 
 (defn make-rate-limit-handler
   "Creates a handler that will only be called if the API rate limit has been exceeded."
