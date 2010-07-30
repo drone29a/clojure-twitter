@@ -5,9 +5,8 @@ Access the Twitter API from Clojure.
 
 # Building #
 
-`lein deps
-
- lein jar`
+    lein deps
+    lein jar
 
 
 # Example #
