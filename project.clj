@@ -1,4 +1,4 @@
-(defproject clojure-twitter "1.1.0-SNAPSHOT"
+(defproject clojure-twitter "1.2.0"
   :description "Twitter Client API for Clojure"
   :dependencies [[org.clojure/clojure "1.2.0-master-SNAPSHOT"]
                  [org.clojure/clojure-contrib "1.2.0-SNAPSHOT"]
