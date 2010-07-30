@@ -19,8 +19,8 @@
 (def *protocol* "http")
 
 ;; Get JSON from clj-apache-http 
-(defmethod http/entity-as :json [entity as]
-  (read-json (http/entity-as entity :string)))
+(defmethod http/entity-as :json [entity as state]
+  (read-json (http/entity-as entity :string state)))
 
 (defmacro with-oauth
   "Set the OAuth access token to be used for all contained Twitter requests."
@@ -51,12 +51,15 @@ take any required and optional arguments and call the associated Twitter method.
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             query-param-names# (sort (map (fn [x#] (keyword (string/replace #"-" "_" (name x#))))
+             query-param-names# (sort (map (fn [x#] (keyword (string/replace (name x#) #"-" "_")))
                                       (concat ~required-params provided-optional-params#)))
              query-params# (apply hash-map (interleave query-param-names#
                                                        (vec (concat ~required-fn-params
                                                                     (vals (sort (select-keys rest-map# 
                                                                                              provided-optional-params#)))))))
+             need-to-url-encode# (if (= :get ~req-method)
+                                   (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))
+                                   query-params#)
              oauth-creds# (when (and *oauth-consumer* 
                                      *oauth-access-token*) 
                             (oauth/credentials *oauth-consumer*
@@ -64,8 +67,7 @@ take any required and optional arguments and call the associated Twitter method.
                                                *oauth-access-token-secret*
                                                ~req-method
                                                req-uri#
-                                               (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))))]
-         ; (into {} (map (fn [k# v#] [k# (oauth.signature/url-encode v#)]) query-params#))
+                                               need-to-url-encode#))]
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
                     :query (merge query-params#
@@ -386,10 +388,11 @@ take any required and optional arguments and call the associated Twitter method.
                                                                  [x__2575__auto__]
                                                                  (keyword
                                                                   (string/replace
+                                                                   (name
+                                                                    x__2575__auto__)
                                                                    #"-"
                                                                    "_"
-                                                                   (name
-                                                                    x__2575__auto__))))
+                                                                   )))
                                                                 provided-optional-params__2573__auto__))
                               query-params__2576__auto__ (apply
                                                           hash-map
@@ -604,9 +607,10 @@ the Twitter API."
     304 nil
     [400 401 403 404 406 500 502 503] (let [body (:content result)
                                             headers (into {} (:headers result))
-                                            error-msg (body "error")
-                                            request-uri (body "request")]
-                                        (throw (proxy [Exception] [(str error-msg ". [" request-uri "]")]
+                                            error-msg (:error body)
+                                            error-code (:code result)
+                                            request-uri (:request body)]
+                                        (throw (proxy [Exception] [(str "[" error-code "] " error-msg ". [" request-uri "]")]
                                                  (request [] (body "request"))
                                                  (remaining-requests [] (headers "X-RateLimit-Remaining"))
                                                  (rate-limit-reset [] (java.util.Date. 
