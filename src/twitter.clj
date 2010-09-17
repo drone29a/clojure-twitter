@@ -51,12 +51,16 @@ take any required and optional arguments and call the associated Twitter method.
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             query-param-names# (sort (map (fn [x#] (keyword (string/replace (name x#) #"-" "_")))
-                                      (concat ~required-params provided-optional-params#)))
-             query-params# (apply hash-map (interleave query-param-names#
-                                                       (vec (concat ~required-fn-params
-                                                                    (vals (sort (select-keys rest-map# 
-                                                                                             provided-optional-params#)))))))
+             required-query-param-names# (map (fn [x#]
+                                                (keyword (string/replace (name x#) #"-" "_" )))
+                                              ~required-params)
+             optional-query-param-names-mapping# (map (fn [x#]
+                                                        [x# (keyword (string/replace (name x#) #"-" "_"))])
+                                                      provided-optional-params#)
+             query-params# (merge (apply hash-map
+                                         (vec (interleave required-query-param-names# ~required-fn-params)))
+                                  (apply merge
+                                         (map (fn [x#] {(second x#) ((first x#) rest-map#)}) optional-query-param-names-mapping#)))
              need-to-url-encode# (if (= :get ~req-method)
                                    (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))
                                    query-params#)
