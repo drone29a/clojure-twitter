@@ -1,0 +1,4 @@
+* 1.2.2
+
+- Fixed incorrect merging of optional params.  Possible regression from 1.2. (found and fixed by Zehua Liu)
+
