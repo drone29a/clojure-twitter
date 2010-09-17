@@ -566,6 +566,7 @@ take any required and optional arguments and call the associated Twitter method.
    :rpp
    :page
    :since-id
+   :max-id
    :geocode
    :show-user]
   (comp #(:content %) status-handler))
