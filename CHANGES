@@ -1,3 +1,7 @@
+* 1.2.4
+
+- Updated dependency of clj-oauth to 1.2.9.
+
 * 1.2.3
 
 - Depending on clj-oauth 1.2.4.
