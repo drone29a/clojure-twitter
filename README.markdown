@@ -29,6 +29,9 @@ Access the Twitter API from Clojure.
     (def oauth-access-token-secret
          ;; The secret included with the access token)
 
+         ;; If your app needs only single account access, you don't need full OAuth
+         ;; and should instead follow "Have a single-user use case?" on http://dev.twitter.com/pages/oauth_single_token
+
     ;; Post to twitter
     (twitter/with-oauth oauth-consumer 
                         oauth-access-token
