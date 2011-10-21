@@ -18,7 +18,7 @@
 (def *oauth-access-token-secret* nil)
 (def *protocol* "http")
 
-;; Get JSON from clj-apache-http 
+;; Get JSON from clj-apache-http
 (defmethod http/entity-as :json [entity as state]
   (read-json (http/entity-as entity :string state)))
 
@@ -28,13 +28,13 @@
   `(binding [*oauth-consumer* ~consumer
              *oauth-access-token* ~access-token
              *oauth-access-token-secret* ~access-token-secret]
-     (do 
+     (do
        ~@body)))
 
 (defmacro with-https
   [ & body]
   `(binding [*protocol* "https"]
-     (do 
+     (do
        ~@body)))
 
 (defmacro def-twitter-method
@@ -64,8 +64,8 @@ take any required and optional arguments and call the associated Twitter method.
              need-to-url-encode# (if (= :get ~req-method)
                                    (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))
                                    query-params#)
-             oauth-creds# (when (and *oauth-consumer* 
-                                     *oauth-access-token*) 
+             oauth-creds# (when (and *oauth-consumer*
+                                     *oauth-access-token*)
                             (oauth/credentials *oauth-consumer*
                                                *oauth-access-token*
                                                *oauth-access-token-secret*
@@ -76,7 +76,7 @@ take any required and optional arguments and call the associated Twitter method.
                     req-uri#
                     :query (merge query-params#
                                   oauth-creds#)
-                    :parameters (http/map->params 
+                    :parameters (http/map->params
                                  {:use-expect-continue false})
                     :as :json))))))
 
@@ -282,7 +282,7 @@ take any required and optional arguments and call the associated Twitter method.
 (def-twitter-method friends-of-name
   :get
   "api.twitter.com/1/friends/ids.json"
-  [:screen-name] 
+  [:screen-name]
   []
   (comp #(:content %) status-handler))
 
@@ -349,7 +349,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (defn update-profile-image [^String image]
   (let [req-uri__9408__auto__ "http://api.twitter.com/1/account/update_profile_image.json"
-  
+
         oauth-creds__9414__auto__ (when
                                       (and
                                        *oauth-consumer*
@@ -388,7 +388,7 @@ take any required and optional arguments and call the associated Twitter method.
                                                                          rest-map__2572__auto__)))
                               query-param-names__2574__auto__ (sort
                                                                (map
-                                                                (fn 
+                                                                (fn
                                                                  [x__2575__auto__]
                                                                  (keyword
                                                                   (string/replace
@@ -430,7 +430,7 @@ take any required and optional arguments and call the associated Twitter method.
   :post
   "api.twitter.com/1/account/update_profile.json"
   []
-  [:name 
+  [:name
    :email
    :url
    :location
@@ -605,7 +605,7 @@ take any required and optional arguments and call the associated Twitter method.
   "Handle the various HTTP status codes that may be returned when accessing
 the Twitter API."
   [result]
-  (condp #(if (coll? %1)  
+  (condp #(if (coll? %1)
             (first (filter (fn [x] (== x %2)) %1))
             (== %2 %1)) (:code result)
     200 result
@@ -618,7 +618,7 @@ the Twitter API."
                                         (throw (proxy [Exception] [(str "[" error-code "] " error-msg ". [" request-uri "]")]
                                                  (request [] (body "request"))
                                                  (remaining-requests [] (headers "X-RateLimit-Remaining"))
-                                                 (rate-limit-reset [] (java.util.Date. 
+                                                 (rate-limit-reset [] (java.util.Date.
                                                                        (long (headers "X-RateLimit-Reset")))))))))
 
 (defn make-rate-limit-handler

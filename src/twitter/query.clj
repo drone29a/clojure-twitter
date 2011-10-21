@@ -5,7 +5,7 @@
 (defn or
   "Build up a search string where all terms are OR'd."
   [& terms]
-  (java.net.URLEncoder/encode 
-   (string/join " OR " 
+  (java.net.URLEncoder/encode
+   (string/join " OR "
                 (map #(str "\"" % "\"") terms))
    "UTF-8"))
