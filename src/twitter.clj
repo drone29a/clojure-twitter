@@ -1,6 +1,5 @@
 (ns twitter
-  (:use [clojure.contrib.json :only [read-json]]
-        [clojure.contrib.java-utils :only [as-str]])
+  (:use [clojure.data.json :only [read-json]])
   (:require [clojure.set :as set]
             [clojure.string :as string]
             [com.twinql.clojure.http :as http]
@@ -13,10 +12,10 @@
 
 (declare status-handler)
 
-(def *oauth-consumer* nil)
-(def *oauth-access-token* nil)
-(def *oauth-access-token-secret* nil)
-(def *protocol* "http")
+(def ^:dynamic *oauth-consumer* nil)
+(def ^:dynamic *oauth-access-token* nil)
+(def ^:dynamic *oauth-access-token-secret* nil)
+(def ^:dynamic *protocol* "http")
 
 ;; Get JSON from clj-apache-http
 (defmethod http/entity-as :json [entity as state]
