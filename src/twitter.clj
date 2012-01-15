@@ -1,6 +1,5 @@
 (ns twitter
-  (:use [clojure.contrib.json :only [read-json]]
-        [clojure.contrib.java-utils :only [as-str]])
+  (:use [clojure.data.json :only [read-json]])
   (:require [clojure.set :as set]
             [clojure.string :as string]
             [com.twinql.clojure.http :as http]
@@ -13,12 +12,12 @@
 
 (declare status-handler)
 
-(def *oauth-consumer* nil)
-(def *oauth-access-token* nil)
-(def *oauth-access-token-secret* nil)
-(def *protocol* "http")
+(def ^:dynamic *oauth-consumer* nil)
+(def ^:dynamic *oauth-access-token* nil)
+(def ^:dynamic *oauth-access-token-secret* nil)
+(def ^:dynamic *protocol* "http")
 
-;; Get JSON from clj-apache-http 
+;; Get JSON from clj-apache-http
 (defmethod http/entity-as :json [entity as state]
   (read-json (http/entity-as entity :string state)))
 
@@ -28,13 +27,13 @@
   `(binding [*oauth-consumer* ~consumer
              *oauth-access-token* ~access-token
              *oauth-access-token-secret* ~access-token-secret]
-     (do 
+     (do
        ~@body)))
 
 (defmacro with-https
   [ & body]
   `(binding [*protocol* "https"]
-     (do 
+     (do
        ~@body)))
 
 (defmacro def-twitter-method
@@ -51,21 +50,34 @@ take any required and optional arguments and call the associated Twitter method.
              rest-map# (apply hash-map rest#)
              provided-optional-params# (set/intersection (set ~optional-params)
                                                          (set (keys rest-map#)))
-             required-query-param-names# (map (fn [x#]
-                                                (keyword (string/replace (name x#) #"-" "_" )))
-                                              ~required-params)
-             optional-query-param-names-mapping# (map (fn [x#]
-                                                        [x# (keyword (string/replace (name x#) #"-" "_"))])
-                                                      provided-optional-params#)
-             query-params# (merge (apply hash-map
-                                         (vec (interleave required-query-param-names# ~required-fn-params)))
-                                  (apply merge
-                                         (map (fn [x#] {(second x#) ((first x#) rest-map#)}) optional-query-param-names-mapping#)))
+             required-query-param-names#
+             (map (fn [x#]
+                    (keyword (string/replace (name x#) #"-" "_" )))
+                  ~required-params)
+
+             optional-query-param-names-mapping#
+             (map (fn [x#]
+                    [x# (keyword (string/replace (name x#) #"-" "_"))])
+                  provided-optional-params#)
+
+             query-params#(merge (apply hash-map
+                                        (vec (interleave
+                                              required-query-param-names#
+                                              ~required-fn-params)))
+                                 (apply merge
+                                        (map (fn [x#] {(second x#)
+                                                       ((first x#)
+                                                        rest-map#)})
+                                             optional-query-param-names-mapping#)))
              need-to-url-encode# (if (= :get ~req-method)
-                                   (into {} (map (fn [[k# v#]] [k# (oauth.signature/url-encode v#)]) query-params#))
+                                   (into {}
+                                         (map (fn [[k# v#]]
+                                                [k#
+                                                 (oauth.signature/url-encode v#)])
+                                              query-params#))
                                    query-params#)
-             oauth-creds# (when (and *oauth-consumer* 
-                                     *oauth-access-token*) 
+             oauth-creds# (when (and *oauth-consumer*
+                                     *oauth-access-token*)
                             (oauth/credentials *oauth-consumer*
                                                *oauth-access-token*
                                                *oauth-access-token-secret*
@@ -76,7 +88,7 @@ take any required and optional arguments and call the associated Twitter method.
                     req-uri#
                     :query (merge query-params#
                                   oauth-creds#)
-                    :parameters (http/map->params 
+                    :parameters (http/map->params
                                  {:use-expect-continue false})
                     :as :json))))))
 
@@ -282,7 +294,7 @@ take any required and optional arguments and call the associated Twitter method.
 (def-twitter-method friends-of-name
   :get
   "api.twitter.com/1/friends/ids.json"
-  [:screen-name] 
+  [:screen-name]
   []
   (comp #(:content %) status-handler))
 
@@ -349,7 +361,7 @@ take any required and optional arguments and call the associated Twitter method.
 
 (defn update-profile-image [^String image]
   (let [req-uri__9408__auto__ "http://api.twitter.com/1/account/update_profile_image.json"
-  
+
         oauth-creds__9414__auto__ (when
                                       (and
                                        *oauth-consumer*
@@ -379,45 +391,47 @@ take any required and optional arguments and call the associated Twitter method.
            (comp #(:content %) status-handler)))
 
 (defn update-profile-background-image [^String image & rest__2570__auto__]
-  (let [req-uri__2571__auto__ "http://api.twitter.com/1/account/update_profile_background_image.json"
-                              rest-map__2572__auto__ (apply hash-map rest__2570__auto__)
-                              provided-optional-params__2573__auto__ (set/intersection
-                                                                      (set [:title])
-                                                                       (set
-                                                                        (keys
-                                                                         rest-map__2572__auto__)))
-                              query-param-names__2574__auto__ (sort
-                                                               (map
-                                                                (fn 
-                                                                 [x__2575__auto__]
-                                                                 (keyword
-                                                                  (string/replace
-                                                                   (name
-                                                                    x__2575__auto__)
-                                                                   #"-"
-                                                                   "_"
-                                                                   )))
-                                                                provided-optional-params__2573__auto__))
-                              query-params__2576__auto__ (apply
-                                                          hash-map
-                                                           (interleave
-                                                            query-param-names__2574__auto__
-                                                            (vec
-                                                             (vals
-                                                              (sort
-                                                               (select-keys
-                                                                rest-map__2572__auto__
-                                                                provided-optional-params__2573__auto__))))))
-                              oauth-creds__2577__auto__ (when
-                                                            (and
-                                                             *oauth-consumer*
-                                                             *oauth-access-token*)
-                                                          (oauth/credentials
-                                                           *oauth-consumer*
-                                                           *oauth-access-token*
-                                                           :post
-                                                           req-uri__2571__auto__
-                                                           query-params__2576__auto__))]
+  (let [req-uri__2571__auto__
+        "http://api.twitter.com/1/account/update_profile_background_image.json"
+
+        rest-map__2572__auto__ (apply hash-map rest__2570__auto__)
+        provided-optional-params__2573__auto__ (set/intersection
+                                                (set [:title])
+                                                (set
+                                                 (keys
+                                                  rest-map__2572__auto__)))
+        query-param-names__2574__auto__ (sort
+                                         (map
+                                          (fn
+                                            [x__2575__auto__]
+                                            (keyword
+                                             (string/replace
+                                              (name
+                                               x__2575__auto__)
+                                              #"-"
+                                              "_"
+                                              )))
+                                          provided-optional-params__2573__auto__))
+        query-params__2576__auto__ (apply
+                                    hash-map
+                                    (interleave
+                                     query-param-names__2574__auto__
+                                     (vec
+                                      (vals
+                                       (sort
+                                        (select-keys
+                                         rest-map__2572__auto__
+                                         provided-optional-params__2573__auto__))))))
+        oauth-creds__2577__auto__ (when
+                                      (and
+                                       *oauth-consumer*
+                                       *oauth-access-token*)
+                                    (oauth/credentials
+                                     *oauth-consumer*
+                                     *oauth-access-token*
+                                     :post
+                                     req-uri__2571__auto__
+                                     query-params__2576__auto__))]
     ((comp #(:content %) status-handler)
      (http/post req-uri__2571__auto__
                 :query (merge query-params__2576__auto__ oauth-creds__2577__auto__)
@@ -430,7 +444,7 @@ take any required and optional arguments and call the associated Twitter method.
   :post
   "api.twitter.com/1/account/update_profile.json"
   []
-  [:name 
+  [:name
    :email
    :url
    :location
@@ -605,21 +619,23 @@ take any required and optional arguments and call the associated Twitter method.
   "Handle the various HTTP status codes that may be returned when accessing
 the Twitter API."
   [result]
-  (condp #(if (coll? %1)  
+  (condp #(if (coll? %1)
             (first (filter (fn [x] (== x %2)) %1))
             (== %2 %1)) (:code result)
     200 result
     304 nil
-    [400 401 403 404 406 500 502 503] (let [body (:content result)
-                                            headers (into {} (:headers result))
-                                            error-msg (:error body)
-                                            error-code (:code result)
-                                            request-uri (:request body)]
-                                        (throw (proxy [Exception] [(str "[" error-code "] " error-msg ". [" request-uri "]")]
-                                                 (request [] (body "request"))
-                                                 (remaining-requests [] (headers "X-RateLimit-Remaining"))
-                                                 (rate-limit-reset [] (java.util.Date. 
-                                                                       (long (headers "X-RateLimit-Reset")))))))))
+    [400 401 403 404 406 500 502 503]
+    (let [body (:content result)
+          headers (into {} (:headers result))
+          error-msg (:error body)
+          error-code (:code result)
+          request-uri (:request body)]
+      (throw (proxy [Exception]
+                 [(str "[" error-code "] " error-msg ". [" request-uri "]")]
+               (request [] (body "request"))
+               (remaining-requests [] (headers "X-RateLimit-Remaining"))
+               (rate-limit-reset [] (java.util.Date.
+                                     (long (headers "X-RateLimit-Reset")))))))))
 
 (defn make-rate-limit-handler
   "Creates a handler that will only be called if the API rate limit has been exceeded."
