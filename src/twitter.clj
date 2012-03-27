@@ -571,6 +571,15 @@ take any required and optional arguments and call the associated Twitter method.
   []
   (comp #(:content %) status-handler))
 
+(def-twitter-method users-search
+  :get
+  "api.twitter.com/1/users/search.json"
+  [:q]
+  [:page
+   :per_page
+   :include_entities]
+  (comp #(:content %) status-handler))
+
 (def-twitter-method search
   :get
   "search.twitter.com/search.json"
