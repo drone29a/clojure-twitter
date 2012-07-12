@@ -69,13 +69,6 @@ take any required and optional arguments and call the associated Twitter method.
                                                        ((first x#)
                                                         rest-map#)})
                                              optional-query-param-names-mapping#)))
-             need-to-url-encode# (if (= :get ~req-method)
-                                   (into {}
-                                         (map (fn [[k# v#]]
-                                                [k#
-                                                 (oauth.signature/url-encode v#)])
-                                              query-params#))
-                                   query-params#)
              oauth-creds# (when (and *oauth-consumer*
                                      *oauth-access-token*)
                             (oauth/credentials *oauth-consumer*
@@ -83,7 +76,7 @@ take any required and optional arguments and call the associated Twitter method.
                                                *oauth-access-token-secret*
                                                ~req-method
                                                req-uri#
-                                               need-to-url-encode#))]
+                                               query-params#))]
          (~handler (~(symbol "http" (name req-method))
                     req-uri#
                     :query (merge query-params#
